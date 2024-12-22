@@ -25,7 +25,7 @@ india_tz = ZoneInfo('Asia/Kolkata')
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     # authentication_classes=(JWTAuthentication,)
 
     def destroy(self, request, *args, **kwargs):
