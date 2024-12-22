@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:alpine"
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for Redis (optional, for consistency)
+
+  web:
+    build: .
+    command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+    volumes:
+      - .:/app
+      - sqlite_data:/app/db  # Mount volume for SQLite data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for the Django web service
+
+  celery:
+    build: .
+    command: ["celery", "-A", "library_management", "worker", "--loglevel=info"]
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for Celery worker
+    
+
+volumes:
+  sqlite_data:  # Define volume for SQLite
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
+

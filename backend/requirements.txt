@@ -1,0 +1,8 @@
+Django
+djangorestframework
+celery
+redis
+drf_yasg
+djangorestframework-simplejwt
+django-rest-swagger
+django-cors-headers

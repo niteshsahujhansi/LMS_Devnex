@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:alpine"
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for Redis (optional, for consistency)
+
+  web:
+    build:
+      context: ./backend  # Point to the backend directory where the Django Dockerfile is
+      dockerfile: Dockerfile  # Ensure it's using the correct Dockerfile in the backend folder
+    command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+    volumes:
+      - ./backend:/app  # Mount the backend directory as a volume
+      - sqlite_data:/app/db  # Mount volume for SQLite data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for the Django web service
+
+  celery:
+    build:
+      context: ./backend  # Use the backend context
+      dockerfile: Dockerfile  # Ensure it's using the correct Dockerfile for the Django service
+    command: ["celery", "-A", "library_management", "worker", "--loglevel=info"]
+    volumes:
+      - ./backend:/app  # Mount the backend directory as a volume
+    depends_on:
+      - redis
+    networks:
+      - app_network
+    environment:
+      - TZ=Asia/Kolkata  # Set timezone for Celery worker
+ 
+  frontend:
+    build:
+      context: ./frontend  # Path to your Next.js project
+      dockerfile: Dockerfile  # Dockerfile for Next.js frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    environment:
+      - NEXT_PUBLIC_API_URL=http://web:8000  # Point to Django backend
+      - TZ=Asia/Kolkata  # Set timezone for the Next.js frontend
+    depends_on:
+      - web  # Ensure the backend starts before the frontend
+
+volumes:
+  sqlite_data:  # Define volume for SQLite
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge

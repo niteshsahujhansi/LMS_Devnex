@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .  # Path to your Next.js project
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api  # Point to the Django backend
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true  # Use the same network for both services
